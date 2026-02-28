@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DollarInput } from "@/components/ui/dollar-input";
+import { PercentInput } from "@/components/ui/percent-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -41,11 +43,10 @@ export default function DailyPage() {
       setMetrics(existing.metrics);
       setQualitative(existing.qualitative);
     } else {
-      // Pre-fill from latest snapshot
       const latest = getLatestSnapshot();
       if (latest) {
         setMetrics(latest.metrics);
-        setQualitative(emptyQualitative()); // Don't pre-fill qualitative
+        setQualitative(emptyQualitative());
       }
     }
   }, []);
@@ -98,25 +99,21 @@ export default function DailyPage() {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent className="space-y-4 pt-0">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>MRR/ARR</Label>
-                    <Input value={metrics.mrr} onChange={(e) => updateMetric("mrr", e.target.value)} placeholder="$8K" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Pipeline Value</Label>
-                    <Input value={metrics.pipeline} onChange={(e) => updateMetric("pipeline", e.target.value)} placeholder="$180K" />
-                  </div>
+                <div className="space-y-2">
+                  <Label>MRR/ARR</Label>
+                  <DollarInput value={metrics.mrr} onChange={(e) => updateMetric("mrr", e.target.value)} placeholder="8000" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Deals in Final Stage</Label>
-                    <Input value={metrics.finalStageDeals} onChange={(e) => updateMetric("finalStageDeals", e.target.value)} placeholder="2 worth $70K" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>New Opportunities</Label>
-                    <Input value={metrics.newOpportunities} onChange={(e) => updateMetric("newOpportunities", e.target.value)} placeholder="3" />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Pipeline Value</Label>
+                  <DollarInput value={metrics.pipeline} onChange={(e) => updateMetric("pipeline", e.target.value)} placeholder="180000" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Deals in Final Stage</Label>
+                  <Input value={metrics.finalStageDeals} onChange={(e) => updateMetric("finalStageDeals", e.target.value)} placeholder="2 worth $70K" />
+                </div>
+                <div className="space-y-2">
+                  <Label>New Opportunities This Week</Label>
+                  <Input value={metrics.newOpportunities} onChange={(e) => updateMetric("newOpportunities", e.target.value)} placeholder="3" />
                 </div>
               </CardContent>
             </CollapsibleContent>
@@ -136,25 +133,21 @@ export default function DailyPage() {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent className="space-y-4 pt-0">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Lead-to-Meeting Rate</Label>
-                    <Input value={metrics.leadToMeetingRate} onChange={(e) => updateMetric("leadToMeetingRate", e.target.value)} placeholder="4%" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Meeting-to-Opportunity Rate</Label>
-                    <Input value={metrics.meetingToOpportunityRate} onChange={(e) => updateMetric("meetingToOpportunityRate", e.target.value)} placeholder="40%" />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Lead-to-Meeting Rate</Label>
+                  <PercentInput value={metrics.leadToMeetingRate} onChange={(e) => updateMetric("leadToMeetingRate", e.target.value)} placeholder="4" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Opportunity-to-Close Rate</Label>
-                    <Input value={metrics.opportunityToCloseRate} onChange={(e) => updateMetric("opportunityToCloseRate", e.target.value)} placeholder="25%" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Avg Sales Cycle</Label>
-                    <Input value={metrics.avgSalesCycle} onChange={(e) => updateMetric("avgSalesCycle", e.target.value)} placeholder="45 days" />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Meeting-to-Opportunity Rate</Label>
+                  <PercentInput value={metrics.meetingToOpportunityRate} onChange={(e) => updateMetric("meetingToOpportunityRate", e.target.value)} placeholder="40" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Opportunity-to-Close Rate</Label>
+                  <PercentInput value={metrics.opportunityToCloseRate} onChange={(e) => updateMetric("opportunityToCloseRate", e.target.value)} placeholder="25" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Average Sales Cycle</Label>
+                  <Input value={metrics.avgSalesCycle} onChange={(e) => updateMetric("avgSalesCycle", e.target.value)} placeholder="45 days" />
                 </div>
                 <div className="space-y-2">
                   <Label>Win/Loss This Month</Label>
@@ -178,25 +171,21 @@ export default function DailyPage() {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent className="space-y-4 pt-0">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Active Users</Label>
-                    <Input value={metrics.activeUsers} onChange={(e) => updateMetric("activeUsers", e.target.value)} placeholder="DAU/WAU/MAU" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Activation Rate</Label>
-                    <Input value={metrics.activationRate} onChange={(e) => updateMetric("activationRate", e.target.value)} placeholder="45%" />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Active Users (DAU/WAU/MAU)</Label>
+                  <Input value={metrics.activeUsers} onChange={(e) => updateMetric("activeUsers", e.target.value)} placeholder="150 / 400 / 1200" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Feature Adoption</Label>
-                    <Input value={metrics.featureAdoption} onChange={(e) => updateMetric("featureAdoption", e.target.value)} placeholder="60%" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>NPS/CSAT</Label>
-                    <Input value={metrics.nps} onChange={(e) => updateMetric("nps", e.target.value)} placeholder="45" />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Activation Rate</Label>
+                  <PercentInput value={metrics.activationRate} onChange={(e) => updateMetric("activationRate", e.target.value)} placeholder="45" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Feature Adoption (Key Feature)</Label>
+                  <PercentInput value={metrics.featureAdoption} onChange={(e) => updateMetric("featureAdoption", e.target.value)} placeholder="60" />
+                </div>
+                <div className="space-y-2">
+                  <Label>NPS/CSAT</Label>
+                  <Input value={metrics.nps} onChange={(e) => updateMetric("nps", e.target.value)} placeholder="45" />
                 </div>
               </CardContent>
             </CollapsibleContent>
@@ -216,19 +205,17 @@ export default function DailyPage() {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent className="space-y-4 pt-0">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Logo Churn (Monthly)</Label>
-                    <Input value={metrics.logoChurn} onChange={(e) => updateMetric("logoChurn", e.target.value)} placeholder="2%" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Revenue Churn (Monthly)</Label>
-                    <Input value={metrics.revenueChurn} onChange={(e) => updateMetric("revenueChurn", e.target.value)} placeholder="1.5%" />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Logo Churn (Monthly)</Label>
+                  <PercentInput value={metrics.logoChurn} onChange={(e) => updateMetric("logoChurn", e.target.value)} placeholder="2" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Revenue Churn (Monthly)</Label>
+                  <PercentInput value={metrics.revenueChurn} onChange={(e) => updateMetric("revenueChurn", e.target.value)} placeholder="1.5" />
                 </div>
                 <div className="space-y-2">
                   <Label>Expansion Revenue</Label>
-                  <Input value={metrics.expansionRevenue} onChange={(e) => updateMetric("expansionRevenue", e.target.value)} placeholder="$2K" />
+                  <DollarInput value={metrics.expansionRevenue} onChange={(e) => updateMetric("expansionRevenue", e.target.value)} placeholder="2000" />
                 </div>
               </CardContent>
             </CollapsibleContent>
@@ -250,7 +237,16 @@ export default function DailyPage() {
               <CardContent className="space-y-4 pt-0">
                 <div className="space-y-2">
                   <Label>Team Capacity</Label>
-                  <Input value={metrics.teamCapacity} onChange={(e) => updateMetric("teamCapacity", e.target.value)} placeholder="Overloaded / At capacity / Have slack" />
+                  <select
+                    value={metrics.teamCapacity}
+                    onChange={(e) => updateMetric("teamCapacity", e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="">Select...</option>
+                    <option value="Overloaded">Overloaded</option>
+                    <option value="At capacity">At capacity</option>
+                    <option value="Have slack">Have slack</option>
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label>Key Blockers</Label>

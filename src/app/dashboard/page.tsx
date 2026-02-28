@@ -73,15 +73,15 @@ export default function DashboardPage() {
               <Card>
                 <CardContent className="pt-4 pb-3">
                   <p className="text-sm text-muted-foreground">Burn</p>
-                  <p className="text-lg font-semibold">{company.monthlyBurn}</p>
+                  <p className="text-lg font-semibold">${Number(company.monthlyBurn).toLocaleString()}/mo</p>
                 </CardContent>
               </Card>
             )}
-            {company.runway && (
+            {company.bankBalance && company.monthlyBurn && Number(company.monthlyBurn) > 0 && (
               <Card>
                 <CardContent className="pt-4 pb-3">
                   <p className="text-sm text-muted-foreground">Runway</p>
-                  <p className="text-lg font-semibold">{company.runway}</p>
+                  <p className="text-lg font-semibold">{Math.round((Number(company.bankBalance) / Number(company.monthlyBurn)) * 10) / 10} mo</p>
                 </CardContent>
               </Card>
             )}

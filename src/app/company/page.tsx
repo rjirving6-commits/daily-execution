@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DollarInput } from "@/components/ui/dollar-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getCompany, saveCompany } from "@/lib/local-storage";
@@ -15,7 +16,7 @@ const emptyCompany: Company = {
   name: "",
   stage: "",
   monthlyBurn: "",
-  runway: "",
+  bankBalance: "",
   icp: "",
   icpBudget: "",
   marketConditions: "",
@@ -70,16 +71,22 @@ export default function CompanyPage() {
               <Label htmlFor="stage">Stage</Label>
               <Input id="stage" value={form.stage} onChange={(e) => update("stage", e.target.value)} placeholder="Seed / Series A / Bootstrapped" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="burn">Monthly Burn</Label>
-                <Input id="burn" value={form.monthlyBurn} onChange={(e) => update("monthlyBurn", e.target.value)} placeholder="$85K/month" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="runway">Runway</Label>
-                <Input id="runway" value={form.runway} onChange={(e) => update("runway", e.target.value)} placeholder="14 months" />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="balance">Bank Balance</Label>
+              <DollarInput id="balance" value={form.bankBalance} onChange={(e) => update("bankBalance", e.target.value)} placeholder="250000" />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="burn">Monthly Burn</Label>
+              <DollarInput id="burn" value={form.monthlyBurn} onChange={(e) => update("monthlyBurn", e.target.value)} placeholder="18000" />
+            </div>
+            {form.bankBalance && form.monthlyBurn && Number(form.monthlyBurn) > 0 && (
+              <div className="rounded-md bg-muted px-4 py-3">
+                <span className="text-sm text-muted-foreground">Runway: </span>
+                <span className="font-semibold">
+                  {Math.round((Number(form.bankBalance) / Number(form.monthlyBurn)) * 10) / 10} months
+                </span>
+              </div>
+            )}
           </CardContent>
         </Card>
 

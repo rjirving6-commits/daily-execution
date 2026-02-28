@@ -93,8 +93,12 @@ export function buildBriefPrompt(
   userParts.push("");
   userParts.push(`**Company Name:** ${company.name}`);
   if (company.stage) userParts.push(`**Stage:** ${company.stage}`);
-  if (company.monthlyBurn) userParts.push(`**Monthly Burn:** ${company.monthlyBurn}`);
-  if (company.runway) userParts.push(`**Runway:** ${company.runway}`);
+  if (company.monthlyBurn) userParts.push(`**Monthly Burn:** $${Number(company.monthlyBurn).toLocaleString()}/month`);
+  if (company.bankBalance) userParts.push(`**Bank Balance:** $${Number(company.bankBalance).toLocaleString()}`);
+  if (company.bankBalance && company.monthlyBurn && Number(company.monthlyBurn) > 0) {
+    const runway = Math.round((Number(company.bankBalance) / Number(company.monthlyBurn)) * 10) / 10;
+    userParts.push(`**Runway:** ${runway} months`);
+  }
   if (company.icp) userParts.push(`**ICP:** ${company.icp}`);
   if (company.icpBudget) userParts.push(`**ICP Budget Range:** ${company.icpBudget}`);
   if (company.marketConditions) userParts.push(`**Current Market Conditions:** ${company.marketConditions}`);

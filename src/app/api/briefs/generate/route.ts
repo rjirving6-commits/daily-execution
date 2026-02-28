@@ -8,7 +8,7 @@ const requestSchema = z.object({
     name: z.string(),
     stage: z.string(),
     monthlyBurn: z.string(),
-    runway: z.string(),
+    bankBalance: z.string(),
     icp: z.string(),
     icpBudget: z.string(),
     marketConditions: z.string(),

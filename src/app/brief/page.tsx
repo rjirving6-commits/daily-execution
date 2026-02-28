@@ -12,7 +12,7 @@ import {
   generateId,
 } from "@/lib/local-storage";
 import type { Company, Goal, DailySnapshot } from "@/lib/local-storage";
-import { BriefMarkdown } from "@/components/brief-markdown";
+import { BriefMarkdown, BriefSections } from "@/components/brief-markdown";
 import { toast } from "sonner";
 import { Zap, Loader2, Check } from "lucide-react";
 import Link from "next/link";
@@ -89,7 +89,7 @@ export default function BriefPage() {
   const ready = company?.name && goals.length > 0 && snapshot;
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-4xl">
+    <main className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Generate Brief</h1>
@@ -150,13 +150,13 @@ export default function BriefPage() {
 
       {/* Status bar during/after generation */}
       {status === "streaming" && (
-        <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 mb-6 text-xs uppercase tracking-wider text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           Generating your operator brief...
         </div>
       )}
       {status === "done" && saved && (
-        <div className="flex items-center gap-2 mb-4 text-sm text-green-600">
+        <div className="flex items-center gap-2 mb-6 text-xs uppercase tracking-wider text-emerald-600">
           <Check className="h-4 w-4" />
           Brief generated and saved to history
         </div>
@@ -173,12 +173,15 @@ export default function BriefPage() {
       )}
 
       {/* Brief content */}
-      {content && (
+      {content && status === "streaming" && (
         <Card>
           <CardContent className="pt-6">
             <BriefMarkdown content={content} />
           </CardContent>
         </Card>
+      )}
+      {content && status !== "streaming" && (
+        <BriefSections content={content} />
       )}
     </main>
   );

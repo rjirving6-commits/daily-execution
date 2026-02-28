@@ -4,7 +4,7 @@ export interface Company {
   name: string;
   stage: string;
   monthlyBurn: string;
-  runway: string;
+  bankBalance: string;
   icp: string;
   icpBudget: string;
   marketConditions: string;
