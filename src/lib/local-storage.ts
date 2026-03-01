@@ -28,7 +28,9 @@ export interface SnapshotMetrics {
   opportunityToCloseRate: string;
   avgSalesCycle: string;
   winLoss: string;
-  activeUsers: string;
+  dau: string;
+  wau: string;
+  mau: string;
   activationRate: string;
   featureAdoption: string;
   nps: string;
@@ -61,6 +63,41 @@ export interface Brief {
   createdAt: string; // ISO
 }
 
+// ---- Standing Decisions ----
+
+export interface StandingDecisions {
+  offTable: string[];
+  lockedStrategy: string;
+  updatedAt: string;
+}
+
+// ---- Accountability Review ----
+
+export type PriorityOutcome = "done" | "partial" | "not_done";
+export type CarryForward = "same" | "resolved" | "deprioritized";
+
+export interface AccountabilityReview {
+  date: string;
+  priority1Text: string;
+  priority1Outcome: PriorityOutcome;
+  priority1Notes: string;
+  priority1CarriedForward: CarryForward;
+  priority2Text: string;
+  priority2Outcome: PriorityOutcome;
+  priority2Notes: string;
+  openLoops: string;
+  contextShifts: string;
+  completedAt: string;
+}
+
+// ---- App Settings ----
+
+export type BriefFrequency = "daily" | "weekly";
+
+export interface AppSettings {
+  briefFrequency: BriefFrequency;
+}
+
 // ---- Keys ----
 
 const KEYS = {
@@ -68,6 +105,9 @@ const KEYS = {
   goals: "de_goals",
   snapshots: "de_snapshots",
   briefs: "de_briefs",
+  standingDecisions: "de_standing_decisions",
+  accountability: "de_accountability",
+  settings: "de_settings",
 } as const;
 
 // ---- Helpers ----
@@ -169,7 +209,9 @@ export function emptyMetrics(): SnapshotMetrics {
     opportunityToCloseRate: "",
     avgSalesCycle: "",
     winLoss: "",
-    activeUsers: "",
+    dau: "",
+    wau: "",
+    mau: "",
     activationRate: "",
     featureAdoption: "",
     nps: "",
@@ -189,5 +231,74 @@ export function emptyQualitative(): QualitativeSignals {
     supportPatterns: "",
     teamConcerns: "",
     competitorIntel: "",
+  };
+}
+
+// ---- Standing Decisions ----
+
+export function getStandingDecisions(): StandingDecisions | null {
+  return read<StandingDecisions>(KEYS.standingDecisions);
+}
+
+export function saveStandingDecisions(data: StandingDecisions): void {
+  write(KEYS.standingDecisions, { ...data, updatedAt: new Date().toISOString() });
+}
+
+// ---- Accountability Reviews ----
+
+function getAllAccountability(): Record<string, AccountabilityReview> {
+  return read<Record<string, AccountabilityReview>>(KEYS.accountability) ?? {};
+}
+
+export function getAccountabilityReview(date: string): AccountabilityReview | null {
+  const all = getAllAccountability();
+  return all[date] ?? null;
+}
+
+export function saveAccountabilityReview(date: string, data: AccountabilityReview): void {
+  const all = getAllAccountability();
+  all[date] = { ...data, date };
+  write(KEYS.accountability, all);
+}
+
+// ---- App Settings ----
+
+export function getAppSettings(): AppSettings {
+  return read<AppSettings>(KEYS.settings) ?? { briefFrequency: "daily" };
+}
+
+export function saveAppSettings(settings: AppSettings): void {
+  write(KEYS.settings, settings);
+}
+
+// ---- Brief Helpers ----
+
+export function extractPrioritiesFromBrief(content: string): { priority1: string; priority2: string } {
+  const p1Match = content.match(/PRIORITY\s*#1[^:]*:\s*(.+?)(?:\n|$)/i);
+  const p2Match = content.match(/PRIORITY\s*#2[^:]*:\s*(.+?)(?:\n|$)/i);
+  return {
+    priority1: p1Match?.[1]?.trim().replace(/\*+/g, "").trim() ?? "",
+    priority2: p2Match?.[1]?.trim().replace(/\*+/g, "").trim() ?? "",
+  };
+}
+
+export function getPreviousBrief(beforeDate: string): Brief | null {
+  const briefs = getBriefs();
+  return briefs.find((b) => b.date < beforeDate) ?? null;
+}
+
+export function emptyAccountabilityReview(date: string): AccountabilityReview {
+  return {
+    date,
+    priority1Text: "",
+    priority1Outcome: "not_done",
+    priority1Notes: "",
+    priority1CarriedForward: "same",
+    priority2Text: "",
+    priority2Outcome: "not_done",
+    priority2Notes: "",
+    openLoops: "",
+    contextShifts: "",
+    completedAt: "",
   };
 }

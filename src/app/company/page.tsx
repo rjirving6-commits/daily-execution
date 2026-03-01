@@ -7,10 +7,17 @@ import { Input } from "@/components/ui/input";
 import { DollarInput } from "@/components/ui/dollar-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getCompany, saveCompany } from "@/lib/local-storage";
-import type { Company } from "@/lib/local-storage";
+import {
+  getCompany,
+  saveCompany,
+  getStandingDecisions,
+  saveStandingDecisions,
+  getAppSettings,
+  saveAppSettings,
+} from "@/lib/local-storage";
+import type { Company, StandingDecisions, BriefFrequency } from "@/lib/local-storage";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { Save, Plus, Trash2 } from "lucide-react";
 
 const emptyCompany: Company = {
   name: "",
@@ -24,16 +31,46 @@ const emptyCompany: Company = {
   updatedAt: "",
 };
 
+const emptyStandingDecisions: StandingDecisions = {
+  offTable: [],
+  lockedStrategy: "",
+  updatedAt: "",
+};
+
 export default function CompanyPage() {
   const [form, setForm] = useState<Company>(emptyCompany);
+  const [decisions, setDecisions] = useState<StandingDecisions>(emptyStandingDecisions);
+  const [frequency, setFrequency] = useState<BriefFrequency>("daily");
 
   useEffect(() => {
     const saved = getCompany();
     if (saved) setForm(saved);
+    const savedDecisions = getStandingDecisions();
+    if (savedDecisions) setDecisions(savedDecisions);
+    const settings = getAppSettings();
+    setFrequency(settings.briefFrequency);
   }, []);
 
   function update(field: keyof Company, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function addOffTableItem() {
+    setDecisions((prev) => ({ ...prev, offTable: [...prev.offTable, ""] }));
+  }
+
+  function removeOffTableItem(index: number) {
+    setDecisions((prev) => ({
+      ...prev,
+      offTable: prev.offTable.filter((_, i) => i !== index),
+    }));
+  }
+
+  function updateOffTableItem(index: number, value: string) {
+    setDecisions((prev) => ({
+      ...prev,
+      offTable: prev.offTable.map((item, i) => (i === index ? value : item)),
+    }));
   }
 
   function handleSave() {
@@ -42,6 +79,8 @@ export default function CompanyPage() {
       return;
     }
     saveCompany(form);
+    saveStandingDecisions(decisions);
+    saveAppSettings({ briefFrequency: frequency });
     toast.success("Company profile saved");
   }
 
@@ -118,6 +157,90 @@ export default function CompanyPage() {
             <div className="space-y-2">
               <Label htmlFor="team">Team Size & Key Gaps</Label>
               <Textarea id="team" value={form.teamSize} onChange={(e) => update("teamSize", e.target.value)} placeholder="6 (2 eng, 1 design, 1 sales, 2 founders). Gap: No dedicated customer success." rows={3} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Standing Decisions (Do Not Revisit)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Off-Table Decisions</Label>
+                <Button variant="outline" size="sm" onClick={addOffTableItem}>
+                  <Plus className="mr-1 h-4 w-4" /> Add
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Decisions already made — the AI will not revisit these.
+              </p>
+              {decisions.offTable.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No standing decisions yet.
+                </p>
+              )}
+              {decisions.offTable.map((item, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input
+                    value={item}
+                    onChange={(e) => updateOffTableItem(index, e.target.value)}
+                    placeholder="e.g. We are not raising a Series A this year"
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive"
+                    onClick={() => removeOffTableItem(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lockedStrategy">Locked Strategy</Label>
+              <p className="text-xs text-muted-foreground">
+                Committed directional bets the AI should respect.
+              </p>
+              <Textarea
+                id="lockedStrategy"
+                value={decisions.lockedStrategy}
+                onChange={(e) =>
+                  setDecisions((prev) => ({ ...prev, lockedStrategy: e.target.value }))
+                }
+                placeholder="e.g. All-in on PLG motion, no outbound sales until $50K MRR"
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Brief Settings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label>Brief Frequency</Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={frequency === "daily" ? "default" : "outline"}
+                  onClick={() => setFrequency("daily")}
+                  className="flex-1"
+                >
+                  Daily
+                </Button>
+                <Button
+                  variant={frequency === "weekly" ? "default" : "outline"}
+                  onClick={() => setFrequency("weekly")}
+                  className="flex-1"
+                >
+                  Weekly
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

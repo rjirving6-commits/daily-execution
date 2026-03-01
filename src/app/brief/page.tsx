@@ -10,11 +10,15 @@ import {
   getDailySnapshot,
   saveBrief,
   generateId,
+  getStandingDecisions,
+  getAccountabilityReview,
+  getAppSettings,
+  getPreviousBrief,
 } from "@/lib/local-storage";
-import type { Company, Goal, DailySnapshot } from "@/lib/local-storage";
+import type { Company, Goal, DailySnapshot, StandingDecisions, AccountabilityReview, BriefFrequency } from "@/lib/local-storage";
 import { BriefMarkdown, BriefSections } from "@/components/brief-markdown";
 import { toast } from "sonner";
-import { Zap, Loader2, Check } from "lucide-react";
+import { Zap, Loader2, Check, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
 function today() {
@@ -25,6 +29,10 @@ export default function BriefPage() {
   const [company, setCompany] = useState<Company | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [snapshot, setSnapshot] = useState<DailySnapshot | null>(null);
+  const [standingDecisions, setStandingDecisions] = useState<StandingDecisions | null>(null);
+  const [accountability, setAccountability] = useState<AccountabilityReview | null>(null);
+  const [frequency, setFrequency] = useState<BriefFrequency>("daily");
+  const [hasPreviousBrief, setHasPreviousBrief] = useState(false);
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<"idle" | "streaming" | "done" | "error">("idle");
   const [saved, setSaved] = useState(false);
@@ -33,6 +41,11 @@ export default function BriefPage() {
     setCompany(getCompany());
     setGoals(getGoals());
     setSnapshot(getDailySnapshot(today()));
+    setStandingDecisions(getStandingDecisions());
+    setAccountability(getAccountabilityReview(today()));
+    const settings = getAppSettings();
+    setFrequency(settings.briefFrequency);
+    setHasPreviousBrief(!!getPreviousBrief(today()));
   }, []);
 
   const generate = useCallback(async () => {
@@ -46,7 +59,14 @@ export default function BriefPage() {
       const res = await fetch("/api/briefs/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company, goals, snapshot }),
+        body: JSON.stringify({
+          company,
+          goals,
+          snapshot,
+          standingDecisions: standingDecisions ?? undefined,
+          accountability: accountability ?? undefined,
+          frequency,
+        }),
       });
 
       if (!res.ok) {
@@ -84,15 +104,18 @@ export default function BriefPage() {
       setStatus("error");
       toast.error("Failed to generate brief");
     }
-  }, [company, goals, snapshot]);
+  }, [company, goals, snapshot, standingDecisions, accountability, frequency]);
 
-  const ready = company?.name && goals.length > 0 && snapshot;
+  const accountabilityDone = !hasPreviousBrief || !!accountability?.completedAt;
+  const ready = company?.name && goals.length > 0 && snapshot && accountabilityDone;
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Generate Brief</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Generate {frequency === "weekly" ? "Weekly" : "Daily"} Brief
+          </h1>
           <p className="text-muted-foreground mt-1">{today()}</p>
         </div>
       </div>
@@ -134,6 +157,20 @@ export default function BriefPage() {
                 </Badge>
               )}
             </div>
+            {hasPreviousBrief && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Accountability:</span>
+                {accountability?.completedAt ? (
+                  <Badge variant="secondary" className="gap-1">
+                    <CheckCircle2 className="h-3 w-3" /> Complete
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive">
+                    <Link href="/daily">Complete accountability review</Link>
+                  </Badge>
+                )}
+              </div>
+            )}
 
             <div className="pt-2">
               <Button
@@ -141,7 +178,7 @@ export default function BriefPage() {
                 disabled={!ready}
                 onClick={generate}
               >
-                <Zap className="mr-2 h-4 w-4" /> Generate Today&apos;s Brief
+                <Zap className="mr-2 h-4 w-4" /> Generate {frequency === "weekly" ? "Weekly" : "Today's"} Brief
               </Button>
             </div>
           </CardContent>

@@ -276,8 +276,8 @@ function OperatorsSection({ body }: { body: string }) {
 // --- Priority Stack ---
 const PRIORITY_STYLES: Record<string, { bg: string; icon: React.ReactNode }> = {
   "1": {
-    bg: "bg-red-500/10 border-red-500/30",
-    icon: <Target className="h-5 w-5 text-red-500" />,
+    bg: "bg-green-500/10 border-green-500/30",
+    icon: <Target className="h-5 w-5 text-green-500" />,
   },
   "2": {
     bg: "bg-amber-500/10 border-amber-500/30",

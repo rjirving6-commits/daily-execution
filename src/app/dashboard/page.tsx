@@ -4,10 +4,18 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getCompany, getGoals, getDailySnapshot, getLatestSnapshot } from "@/lib/local-storage";
+import {
+  getCompany,
+  getGoals,
+  getDailySnapshot,
+  getLatestSnapshot,
+  getAccountabilityReview,
+  getAppSettings,
+  getPreviousBrief,
+} from "@/lib/local-storage";
 import { useEffect, useState } from "react";
-import type { Company, Goal, DailySnapshot } from "@/lib/local-storage";
-import { Building2, Target, BarChart3, Zap, ArrowRight } from "lucide-react";
+import type { Company, Goal, DailySnapshot, BriefFrequency } from "@/lib/local-storage";
+import { Building2, Target, BarChart3, Zap, ArrowRight, CheckCircle2 } from "lucide-react";
 
 function toDateString(d: Date) {
   return d.toISOString().split("T")[0];
@@ -41,12 +49,22 @@ export default function DashboardPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [todaySnapshot, setTodaySnapshot] = useState<DailySnapshot | null>(null);
   const [latestSnapshot, setLatestSnapshot] = useState<DailySnapshot | null>(null);
+  const [accountabilityDone, setAccountabilityDone] = useState(false);
+  const [hasPreviousBrief, setHasPreviousBrief] = useState(false);
+  const [frequency, setFrequency] = useState<BriefFrequency>("daily");
 
   useEffect(() => {
     setCompany(getCompany());
     setGoals(getGoals());
-    setTodaySnapshot(getDailySnapshot(toDateString(new Date())));
+    const todayStr = toDateString(new Date());
+    setTodaySnapshot(getDailySnapshot(todayStr));
     setLatestSnapshot(getLatestSnapshot());
+    const settings = getAppSettings();
+    setFrequency(settings.briefFrequency);
+    const prevBrief = getPreviousBrief(todayStr);
+    setHasPreviousBrief(!!prevBrief);
+    const review = getAccountabilityReview(todayStr);
+    setAccountabilityDone(!!review?.completedAt);
   }, []);
 
   const companyDays = daysSince(company?.updatedAt);
@@ -125,6 +143,17 @@ export default function DashboardPage() {
               <Badge variant="destructive">None</Badge>
             )}
           </div>
+          {hasPreviousBrief && (
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Accountability:</span>
+              {accountabilityDone ? (
+                <Badge variant="default" className="bg-green-600">Done</Badge>
+              ) : (
+                <Badge variant="destructive">Pending</Badge>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Primary CTA */}
@@ -132,7 +161,7 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5" />
-              Generate Today&apos;s Brief
+              Generate {frequency === "weekly" ? "Weekly" : "Today's"} Brief
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -160,12 +189,12 @@ export default function DashboardPage() {
                   Enter today&apos;s metrics to generate a brief.
                 </p>
                 <Button asChild>
-                  <Link href="/daily">Enter Daily Snapshot <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  <Link href="/daily">Enter {frequency === "weekly" ? "Weekly" : "Daily"} Snapshot <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
               </div>
             ) : (
               <Button asChild size="lg">
-                <Link href="/brief">Generate Brief <Zap className="ml-2 h-4 w-4" /></Link>
+                <Link href="/brief">Generate {frequency === "weekly" ? "Weekly" : "Daily"} Brief <Zap className="ml-2 h-4 w-4" /></Link>
               </Button>
             )}
           </CardContent>
