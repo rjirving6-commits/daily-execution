@@ -225,7 +225,8 @@ const markdownComponents: Components = {
 
 function parseLabeledBullets(body: string): { label: string; text: string }[] {
   const items: { label: string; text: string }[] = [];
-  const regex = /[-*]\s+\*\*([^:*]+)(?::?\*\*:?\s*|\*\*:\s*)(.+)/g;
+  // Match both "- **Label:** text" and "**Label:** text" (with or without bullet prefix)
+  const regex = /(?:[-*]\s+)?\*\*([^:*]+)(?::?\*\*:?\s*|\*\*:\s*)(.+)/g;
   let match;
   while ((match = regex.exec(body)) !== null) {
     items.push({ label: match[1].trim(), text: match[2].trim() });
@@ -252,8 +253,45 @@ const ROLE_COLORS: Record<string, string> = {
   COO: "bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20",
 };
 
+function parseRoleBlocks(body: string): { label: string; text: string }[] {
+  // Parse "**Role Lens:**\n- bullet\n- bullet" blocks
+  const blocks: { label: string; text: string }[] = [];
+  const regex = /\*\*([A-Z]{2,3})(?:\s+Lens)?(?::?\*\*:?\s*|\*\*:\s*)/g;
+  let match;
+  const matches: { label: string; index: number }[] = [];
+  while ((match = regex.exec(body)) !== null) {
+    matches.push({ label: match[1], index: match.index + match[0].length });
+  }
+  for (let i = 0; i < matches.length; i++) {
+    const start = matches[i].index;
+    const end = i + 1 < matches.length ? body.lastIndexOf("**", matches[i + 1].index) : body.length;
+    const content = body.slice(start, end).trim();
+    // Collect bullet points into a single text
+    const bullets = content
+      .split("\n")
+      .map((l) => l.replace(/^[-*]\s+/, "").trim())
+      .filter(Boolean);
+    blocks.push({ label: matches[i].label, text: bullets.join(". ").replace(/\.\./g, ".") });
+  }
+  return blocks;
+}
+
 function OperatorsSection({ body }: { body: string }) {
-  const items = parseLabeledBullets(body);
+  // Try inline format first: "- **CEO:** advice text"
+  let items = parseLabeledBullets(body);
+  // Normalize labels: "CEO Lens" -> "CEO"
+  items = items.map((item) => ({
+    label: item.label.replace(/\s+Lens$/i, "").trim(),
+    text: item.text,
+  }));
+  // Check if we got actual role matches
+  const roleKeys = Object.keys(ROLE_COLORS);
+  const hasRoles = items.some((item) => roleKeys.includes(item.label));
+  // If inline didn't produce roles, try block format: "**CEO Lens:**\n- bullet"
+  if (!hasRoles) {
+    const blocks = parseRoleBlocks(body);
+    if (blocks.length > 0) items = blocks;
+  }
   if (items.length === 0) return <BriefMarkdown content={body} />;
 
   return (
@@ -291,7 +329,6 @@ const PRIORITY_STYLES: Record<string, { bg: string; icon: React.ReactNode }> = {
 
 function PriorityStackSection({ body }: { body: string }) {
   const items = parseLabeledBullets(body);
-  if (items.length === 0) return <BriefMarkdown content={body} />;
 
   const priorities: { label: string; text: string; num: string }[] = [];
   let doNotDo: string | null = null;
@@ -302,10 +339,22 @@ function PriorityStackSection({ body }: { body: string }) {
       priorities.push({ ...item, num: priorityMatch[1] });
     } else if (item.label.toUpperCase().includes("DO NOT DO")) {
       doNotDo = item.text;
-    } else {
-      priorities.push({ ...item, num: "0" });
     }
   }
+
+  // Also check for "DO NOT DO TODAY:" as standalone heading followed by bullets
+  if (!doNotDo) {
+    const doNotDoMatch = body.match(/\*\*DO NOT DO[^*]*\*\*:?\s*\n([\s\S]*?)(?=\n\*\*|\n###|$)/i);
+    if (doNotDoMatch) {
+      const bullets = doNotDoMatch[1]
+        .split("\n")
+        .map((l) => l.replace(/^[-*]\s+/, "").trim())
+        .filter(Boolean);
+      doNotDo = bullets.join(" | ");
+    }
+  }
+
+  if (priorities.length === 0) return <BriefMarkdown content={body} />;
 
   return (
     <div className="space-y-3">
