@@ -101,12 +101,19 @@ export async function POST(req: Request) {
 
     const model = process.env.BRIEF_MODEL || "anthropic/claude-sonnet-4";
 
+    console.log("[brief-generate] using model:", model);
+    console.log("[brief-generate] API key present:", !!process.env.OPENROUTER_API_KEY);
+    console.log("[brief-generate] prompt length:", user.length);
+
     const result = streamText({
       model: openrouter(model),
       system,
       prompt: user,
       maxOutputTokens: 8000,
       maxRetries: 1,
+      onError: ({ error }) => {
+        console.error("[brief-generate] stream error:", error);
+      },
     });
 
     return result.toTextStreamResponse();
